@@ -1,0 +1,8 @@
+{
+  "name": "Remix Money Tracker By Rahee",
+  "description": "Comprehensive money tracking application with credit/debit logs, payment mode separation, ATM withdrawals, change calculations, quick presets, category tracking, and currency note serial number management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

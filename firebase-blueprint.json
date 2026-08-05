@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile with status and role",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "enum": ["admin", "user"] },
+        "status": { "type": "string", "enum": ["approved", "pending", "rejected"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["uid", "name", "role", "status"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Credit, debit or ATM money record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["credit", "debit", "atm_withdrawal"] },
+        "amount": { "type": "number" },
+        "givenAmount": { "type": "number" },
+        "changeAmount": { "type": "number" },
+        "recipientOrSource": { "type": "string", "maxLength": 150 },
+        "category": { "type": "string", "maxLength": 100 },
+        "paymentMode": { "type": "string", "enum": ["cash", "online_upi", "atm_cash"] },
+        "dateTime": { "type": "string" },
+        "remarks": { "type": "string", "maxLength": 500 },
+        "userId": { "type": "string" },
+        "createdByEmail": { "type": "string" },
+        "createdByName": { "type": "string" }
+      },
+      "required": ["type", "amount", "recipientOrSource", "category", "paymentMode", "dateTime"]
+    },
+    "CurrencyNote": {
+      "title": "CurrencyNote",
+      "description": "Tracked cash currency note with serial number",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "denomination": { "type": "number" },
+        "serialNumber": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "enum": ["in_wallet", "given", "received"] },
+        "linkedTransactionId": { "type": "string" },
+        "remarks": { "type": "string", "maxLength": 300 },
+        "createdAt": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdByEmail": { "type": "string" }
+      },
+      "required": ["denomination", "serialNumber", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile records with approval state"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Money transaction records"
+    },
+    "/currency_notes/{noteId}": {
+      "schema": "CurrencyNote",
+      "description": "Tracked serial number cash currency notes"
+    }
+  }
+}
