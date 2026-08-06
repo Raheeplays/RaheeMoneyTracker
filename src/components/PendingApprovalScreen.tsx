@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Clock, ShieldAlert, RefreshCw, LogOut, CheckCircle2, User, Hash } from 'lucide-react';
+import { Clock, ShieldAlert, RefreshCw, LogOut, CheckCircle2, User, Hash, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export const PendingApprovalScreen: React.FC = () => {
@@ -50,6 +50,12 @@ export const PendingApprovalScreen: React.FC = () => {
               {currentUser?.username ? `@${currentUser.username}` : currentUser?.uid}
             </span>
           </div>
+          {currentUser?.email && (
+            <div className="flex items-center gap-2.5 text-xs text-slate-300">
+              <Mail className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="text-emerald-300 truncate font-mono">{currentUser.email}</span>
+            </div>
+          )}
           <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-[11px]">
             <span className="text-slate-400">Account Status:</span>
             <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase tracking-wider">

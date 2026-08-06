@@ -108,9 +108,14 @@ export const AdminPanel: React.FC = () => {
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
         <div className="flex justify-between items-center pb-3 border-b border-slate-800">
           <div className="flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-amber-400" />
-            <h3 className="text-base font-bold text-white">
-              Pending Account Approvals ({pendingUsers.length})
+            <UserCheck className="w-5 h-5 text-amber-400 shrink-0" />
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <span>Pending Sign-Up Requests</span>
+              {pendingUsers.length > 0 && (
+                <span className="px-2.5 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 animate-pulse">
+                  {pendingUsers.length} Pending
+                </span>
+              )}
             </h3>
           </div>
           <span className="text-xs text-slate-400">
@@ -122,43 +127,58 @@ export const AdminPanel: React.FC = () => {
           <div className="bg-slate-800/40 border border-slate-800 rounded-xl p-4 text-center">
             <CheckCircle className="w-8 h-8 text-emerald-400/60 mx-auto mb-1" />
             <p className="text-xs text-slate-400 font-medium">
-              All user accounts are up-to-date and approved.
+              All user sign-up accounts are verified and approved.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {pendingUsers.map((u) => (
-              <div
-                key={u.uid}
-                className="bg-slate-800/80 border border-amber-800/40 rounded-xl p-4 flex items-center justify-between gap-3 shadow-md"
-              >
-                <div>
-                  <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
-                    <span>{u.name}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                      Pending
-                    </span>
-                  </h4>
-                  <p className="text-xs text-slate-300 mt-0.5">{u.username ? `@${u.username}` : 'User Account'}</p>
-                  <p className="text-[10px] text-slate-400 font-mono mt-1">ID: {u.uid}</p>
-                </div>
+          <div className="space-y-3">
+            <div className="p-3 bg-amber-950/40 border border-amber-800/60 rounded-xl text-xs text-amber-300 flex items-center justify-between">
+              <span>⚠️ Action required: Review user sign-up credentials below and click Approve or Reject.</span>
+            </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => approveUser(u.uid)}
-                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-colors shadow"
-                  >
-                    <Check className="w-3.5 h-3.5" /> Approve
-                  </button>
-                  <button
-                    onClick={() => rejectUser(u.uid)}
-                    className="px-2.5 py-1.5 bg-slate-700 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
-                  >
-                    <X className="w-3.5 h-3.5" /> Reject
-                  </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {pendingUsers.map((u) => (
+                <div
+                  key={u.uid}
+                  className="bg-slate-800/90 border border-amber-800/50 rounded-xl p-4 flex flex-col justify-between gap-3 shadow-md hover:border-amber-500/50 transition-colors"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                        <span>{u.name}</span>
+                      </h4>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase tracking-wider">
+                        Pending
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-300 font-medium">Username: <span className="text-amber-300 font-bold">@{u.username || 'n/a'}</span></p>
+                    {u.email && <p className="text-xs text-emerald-400 font-mono">Auth Email: {u.email}</p>}
+                    <p className="text-[10px] text-slate-400 font-mono">User ID: {u.uid}</p>
+                    {u.createdAt && (
+                      <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-slate-400" /> Requested: {new Date(u.createdAt).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-700/60 flex items-center justify-end gap-2 shrink-0">
+                    <button
+                      onClick={() => approveUser(u.uid)}
+                      className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-colors shadow"
+                    >
+                      <Check className="w-4 h-4" /> Approve User
+                    </button>
+                    <button
+                      onClick={() => rejectUser(u.uid)}
+                      className="px-3 py-1.5 bg-slate-700 hover:bg-rose-900/80 text-slate-300 hover:text-rose-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                    >
+                      <X className="w-4 h-4" /> Reject
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
@@ -177,6 +197,7 @@ export const AdminPanel: React.FC = () => {
                 <div>
                   <p className="font-bold text-white">{usr.name}</p>
                   <p className="text-[11px] text-slate-400 truncate max-w-[150px]">{usr.username ? `@${usr.username}` : usr.role}</p>
+                  {usr.email && <p className="text-[10px] text-emerald-400 truncate max-w-[150px] font-mono">{usr.email}</p>}
                 </div>
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${

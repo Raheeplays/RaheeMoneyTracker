@@ -11,6 +11,7 @@ import { Header } from './components/Header';
 import { BottomNavigation } from './components/BottomNavigation';
 import { DashboardStats } from './components/DashboardStats';
 import { QuickAddWidget } from './components/QuickAddWidget';
+import { PendingApprovalDashboardWidget } from './components/PendingApprovalDashboardWidget';
 import { TransactionList } from './components/TransactionList';
 import { CurrencyNotesView } from './components/CurrencyNotesView';
 import { AdminPanel } from './components/AdminPanel';
@@ -91,6 +92,7 @@ function MoneyTrackerApp() {
               transition={{ duration: 0.2 }}
               className="space-y-6"
             >
+              <PendingApprovalDashboardWidget />
               <QuickAddWidget onOpenDetailedCash={() => setIsDetailedCashModalOpen(true)} />
               <DashboardStats onOpenDetailedCash={() => setIsDetailedCashModalOpen(true)} />
               <TransactionList />

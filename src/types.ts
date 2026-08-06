@@ -47,6 +47,8 @@ export interface UserProfile {
   uid: string;
   name: string;
   username?: string;
+  email?: string;
+  password?: string;
   role: 'admin' | 'user';
   status: UserApprovalStatus; // 'approved' | 'pending' | 'rejected'
   createdAt?: string;

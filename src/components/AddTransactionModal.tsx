@@ -105,54 +105,57 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-sm">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl p-5 sm:p-6 shadow-2xl text-slate-100 my-8 relative"
+          className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] flex flex-col shadow-2xl text-slate-100 relative overflow-hidden"
         >
-          {/* Close Header */}
-          <div className="flex justify-between items-center pb-4 mb-4 border-b border-slate-800">
+          {/* Sticky Fixed Header - Close button is ALWAYS visible */}
+          <div className="flex justify-between items-center px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-800 bg-slate-900 shrink-0 z-20">
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <PlusCircle className="w-5 h-5 text-emerald-400" />
+              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <PlusCircle className="w-5 h-5 text-emerald-400 shrink-0" />
                 <span>Add Money Log Record</span>
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-[11px] sm:text-xs text-slate-400">
                 Record detailed Credit, Debit, ATM Cash, or Store Change
               </p>
             </div>
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+              className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors shrink-0"
+              title="Close Modal"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Scrollable Form Body */}
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5">
             
             {/* Transaction Type Buttons */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Transaction Type
               </label>
-              <div className="grid grid-cols-3 gap-2 bg-slate-800/80 p-1 rounded-xl">
+              <div className="grid grid-cols-3 gap-1.5 bg-slate-800/80 p-1 rounded-xl">
                 <button
                   type="button"
                   onClick={() => {
                     setType('debit');
                     if (paymentMode === 'atm_cash') setPaymentMode('cash');
                   }}
-                  className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  className={`py-1.5 px-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all ${
                     type === 'debit'
                       ? 'bg-rose-600 text-white shadow'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  <TrendingDown className="w-4 h-4" />
-                  <span>Debit (Expense)</span>
+                  <TrendingDown className="w-3.5 h-3.5" />
+                  <span>Debit (-)</span>
                 </button>
 
                 <button
@@ -161,14 +164,14 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                     setType('credit');
                     if (paymentMode === 'atm_cash') setPaymentMode('online_upi');
                   }}
-                  className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  className={`py-1.5 px-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all ${
                     type === 'credit'
                       ? 'bg-emerald-600 text-white shadow'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  <TrendingUp className="w-4 h-4" />
-                  <span>Credit (Income)</span>
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  <span>Credit (+)</span>
                 </button>
 
                 <button
@@ -179,14 +182,14 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                     setCategory('ATM Cash Out');
                     setRecipientOrSource('ATM Cash Withdrawal');
                   }}
-                  className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  className={`py-1.5 px-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all ${
                     type === 'atm_withdrawal'
                       ? 'bg-sky-600 text-white shadow'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  <Building2 className="w-4 h-4" />
-                  <span>ATM Withdrawal</span>
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>ATM Cash</span>
                 </button>
               </div>
             </div>
@@ -199,7 +202,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                 </label>
                 <select
                   onChange={(e) => handleSelectTemplate(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
                 >
                   <option value="">-- Choose from Presets (Store, Driver, Bills, etc.) --</option>
                   {quickTemplates.map((tpl) => (
@@ -221,15 +224,15 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                   type="text"
                   value={recipientOrSource}
                   onChange={(e) => setRecipientOrSource(e.target.value)}
-                  placeholder={type === 'debit' ? 'e.g., Retail Store, Driver, Milkman, Electricity Board' : 'e.g., Salary, Client, Friend'}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  placeholder={type === 'debit' ? 'e.g., Retail Store, Driver, Milkman' : 'e.g., Salary, Client, Friend'}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
                   required
                 />
               </div>
             </div>
 
             {/* Amounts Section: Actual Amount & Change Amount Calculation */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-800/40 p-3 rounded-2xl border border-slate-800">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-slate-800/40 p-2.5 rounded-xl border border-slate-800">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
                   Actual Money Amount (₹) *
@@ -240,7 +243,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="e.g. 200"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-base font-bold text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-sm font-bold text-white focus:outline-none focus:border-emerald-500"
                   required
                 />
               </div>
@@ -258,19 +261,19 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                     value={givenAmount}
                     onChange={(e) => setGivenAmount(e.target.value)}
                     placeholder="e.g. 500"
-                    className="w-full bg-slate-800 border border-amber-500/40 rounded-xl px-3.5 py-2 text-base font-bold text-amber-300 focus:outline-none focus:border-amber-400"
+                    className="w-full bg-slate-800 border border-amber-500/40 rounded-xl px-3 py-1.5 text-sm font-bold text-amber-300 focus:outline-none focus:border-amber-400"
                   />
                 </div>
               )}
 
               {/* Live Change Amount Calculation Result */}
               {paymentMode === 'cash' && type === 'debit' && givenAmtNum > 0 && (
-                <div className="sm:col-span-2 bg-emerald-950/40 border border-emerald-800/60 p-2.5 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs text-emerald-300 font-medium">
-                    <Calculator className="w-4 h-4 text-emerald-400" />
+                <div className="sm:col-span-2 bg-emerald-950/40 border border-emerald-800/60 p-2 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-medium">
+                    <Calculator className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Change Returned to You:</span>
                   </div>
-                  <span className="text-sm font-extrabold text-emerald-300 bg-emerald-900/60 px-3 py-1 rounded-lg border border-emerald-700">
+                  <span className="text-xs font-extrabold text-emerald-300 bg-emerald-900/60 px-2.5 py-0.5 rounded-lg border border-emerald-700">
                     ₹{changeAmtNum} (Returned)
                   </span>
                 </div>
@@ -279,34 +282,34 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
 
             {/* Payment Mode (Offline Cash vs Online UPI vs ATM) */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Payment Mode (Offline / Online)
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5">
                 <button
                   type="button"
                   onClick={() => setPaymentMode('cash')}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                  className={`py-1.5 px-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                     paymentMode === 'cash'
                       ? 'bg-amber-500/20 border-amber-500 text-amber-300'
                       : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
                   }`}
                 >
-                  <Banknote className="w-4 h-4 text-amber-400" />
-                  <span>Offline (Cash)</span>
+                  <Banknote className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Offline Cash</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setPaymentMode('online_upi')}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                  className={`py-1.5 px-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                     paymentMode === 'online_upi'
                       ? 'bg-indigo-500/20 border-indigo-500 text-indigo-300'
                       : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
                   }`}
                 >
-                  <Smartphone className="w-4 h-4 text-indigo-400" />
-                  <span>Online (UPI)</span>
+                  <Smartphone className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Online UPI</span>
                 </button>
 
                 <button
@@ -315,14 +318,14 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                     setPaymentMode('atm_cash');
                     setType('atm_withdrawal');
                   }}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                  className={`py-1.5 px-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                     paymentMode === 'atm_cash'
                       ? 'bg-sky-500/20 border-sky-500 text-sky-300'
                       : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
                   }`}
                 >
-                  <Building2 className="w-4 h-4 text-sky-400" />
-                  <span>ATM Withdrawal</span>
+                  <Building2 className="w-3.5 h-3.5 text-sky-400" />
+                  <span>ATM Cash</span>
                 </button>
               </div>
             </div>
@@ -330,12 +333,12 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
             {/* Category selection */}
             <div>
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                Category (EMI, Loan, Recharge, Fuel, Bill, etc.)
+                Category
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
               >
                 {DEFAULT_CATEGORIES.map((cat) => (
                   <option key={cat.id} value={cat.name}>
@@ -354,11 +357,11 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                 type="datetime-local"
                 value={dateTime}
                 onChange={(e) => setDateTime(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
 
-            {/* Remarks / Notes (e.g. bought snacks, biscuits) */}
+            {/* Remarks / Notes */}
             <div>
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Remarks / Additional Details
@@ -368,23 +371,23 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                 onChange={(e) => setRemarks(e.target.value)}
                 rows={2}
                 placeholder="e.g., bought biscuits, snacks, milk, monthly electricity bill note..."
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
 
             {/* Note Serial Numbers Link Section */}
-            <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700 space-y-2">
+            <div className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700 space-y-2">
               <div className="flex justify-between items-center">
                 <label className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
-                  <Hash className="w-4 h-4 text-amber-400" />
-                  <span>Link Physical Note Serial Numbers (Optional)</span>
+                  <Hash className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Link Physical Note Serials (Optional)</span>
                 </label>
-                <span className="text-[10px] text-slate-400">Track Note 500, 200, 100 serials</span>
+                <span className="text-[10px] text-slate-400">Serials</span>
               </div>
 
               {/* Pick from existing tracked notes in wallet */}
               {currencyNotes.filter((n) => n.status === 'in_wallet').length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-1">
+                <div className="flex flex-wrap gap-1 pt-1">
                   {currencyNotes
                     .filter((n) => n.status === 'in_wallet')
                     .map((note) => {
@@ -394,7 +397,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                           key={note.id}
                           type="button"
                           onClick={() => handleToggleNoteSerial(note.serialNumber)}
-                          className={`text-[11px] font-mono px-2.5 py-1 rounded-lg border transition-all ${
+                          className={`text-[10px] font-mono px-2 py-0.5 rounded-md border transition-all ${
                             isSelected
                               ? 'bg-amber-500 text-slate-950 font-bold border-amber-400'
                               : 'bg-slate-800 text-amber-300 border-slate-700 hover:border-amber-500/50'
@@ -419,26 +422,28 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                 <button
                   type="button"
                   onClick={handleAddCustomNoteSerial}
-                  className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-amber-300 text-xs font-semibold rounded-lg"
+                  className="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-amber-300 text-xs font-semibold rounded-lg shrink-0"
                 >
                   + Add Serial
                 </button>
               </div>
 
               {selectedNoteSerials.length > 0 && (
-                <div className="text-[11px] text-slate-300">
-                  Linked Serials: <span className="font-mono text-amber-400">{selectedNoteSerials.join(', ')}</span>
+                <div className="text-[10px] text-slate-300">
+                  Linked: <span className="font-mono text-amber-400">{selectedNoteSerials.join(', ')}</span>
                 </div>
               )}
             </div>
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl text-sm shadow-md transition-all active:scale-98"
-            >
-              Save Transaction Record
-            </button>
+            <div className="pt-2 sticky bottom-0 bg-slate-900/95 backdrop-blur-md pb-1 z-10">
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl text-xs shadow-md transition-all active:scale-98"
+              >
+                Save Transaction Record
+              </button>
+            </div>
           </form>
         </motion.div>
       </div>

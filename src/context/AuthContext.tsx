@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile, AdminOTPState, UserApprovalStatus } from '../types';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import { ref, onValue, set, update, get } from 'firebase/database';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 interface AuthContextType {
   currentUser: UserProfile | null;
@@ -9,8 +10,8 @@ interface AuthContextType {
   allUsers: UserProfile[];
   pendingUsers: UserProfile[];
   loginAsAdmin: (name: string, pass: string, otp: string) => { success: boolean; message: string };
-  loginAsUser: (username: string) => { success: boolean; message: string };
-  signUpUser: (name: string, username: string) => { success: boolean; message: string };
+  loginAsUser: (identifier: string, pass: string) => Promise<{ success: boolean; message: string }>;
+  signUpUser: (name: string, username: string, email: string, pass: string) => Promise<{ success: boolean; message: string }>;
   approveUser: (uid: string) => Promise<void>;
   rejectUser: (uid: string) => Promise<void>;
   refreshUserStatus: () => Promise<void>;
@@ -171,25 +172,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: true, message: 'Welcome back Admin Rahee!' };
   };
 
-  const signUpUser = (name: string, username: string) => {
+  const signUpUser = async (name: string, username: string, email: string, pass: string) => {
     const cleanedUsername = username.trim().toLowerCase();
     const cleanedName = name.trim();
+    const cleanedEmail = email.trim().toLowerCase();
 
-    if (!cleanedUsername || !cleanedName) {
-      return { success: false, message: 'Please provide both full name and username.' };
+    if (!cleanedName || !cleanedUsername || !cleanedEmail || !pass) {
+      return { success: false, message: 'Please provide full name, username, auth email, and password.' };
     }
 
-    // Check if user already exists
-    const existing = allUsers.find((u) => u.username?.toLowerCase() === cleanedUsername || u.name.toLowerCase() === cleanedUsername);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanedEmail)) {
+      return { success: false, message: 'Please enter a valid auth email address (e.g. user@example.com).' };
+    }
+
+    if (pass.length < 6) {
+      return { success: false, message: 'Password must be at least 6 characters long.' };
+    }
+
+    // Check if user already exists with username or email
+    const existing = allUsers.find(
+      (u) =>
+        u.username?.toLowerCase() === cleanedUsername ||
+        u.email?.toLowerCase() === cleanedEmail
+    );
     if (existing) {
-      return { success: false, message: 'An account with this username already exists. Please log in.' };
+      if (existing.email?.toLowerCase() === cleanedEmail) {
+        return { success: false, message: 'An account with this email address already exists. Please sign in.' };
+      }
+      return { success: false, message: 'An account with this username already exists. Please choose a different username.' };
     }
 
-    const uid = `user-${Date.now()}`;
+    let uid = `user-${Date.now()}`;
+
+    // Attempt Firebase Auth sign up if enabled
+    try {
+      const userCred = await createUserWithEmailAndPassword(auth, cleanedEmail, pass);
+      if (userCred.user) {
+        uid = userCred.user.uid;
+      }
+    } catch (fbErr: any) {
+      console.warn('Firebase Auth sign up note:', fbErr?.message);
+      if (fbErr?.code === 'auth/email-already-in-use') {
+        return { success: false, message: 'This email is already registered in Firebase. Please sign in.' };
+      }
+      if (fbErr?.code === 'auth/weak-password') {
+        return { success: false, message: 'Password is too weak. Please use at least 6 characters.' };
+      }
+    }
+
     const newUser: UserProfile = {
       uid,
       name: cleanedName,
       username: cleanedUsername,
+      email: cleanedEmail,
+      password: pass,
       role: 'user',
       status: 'pending', // Requires Admin approval!
       createdAt: new Date().toISOString(),
@@ -198,32 +235,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentUser(newUser);
     localStorage.setItem('moneytracker_user', JSON.stringify(newUser));
 
-    setAllUsers((prev) => [newUser, ...prev]);
+    setAllUsers((prev) => [newUser, ...prev.filter((u) => u.uid !== uid)]);
 
-    // Save user record to Realtime Database
-    set(ref(db, `users/${uid}`), newUser).catch((err) => {
-      console.log('Saved user document locally:', err);
-    });
+    // Save user record to Realtime Database users node
+    try {
+      await set(ref(db, `users/${uid}`), newUser);
+      console.log('Saved user record to RTDB users node successfully:', uid);
+    } catch (err) {
+      console.error('Failed saving user record to RTDB users node:', err);
+    }
 
     return {
       success: true,
-      message: 'Account created successfully! Your account is now pending Admin approval.',
+      message: 'Account created with email & password! Account is pending Admin Rahee approval.',
     };
   };
 
-  const loginAsUser = (username: string) => {
-    const cleanedUsername = username.trim().toLowerCase();
-    const existing = allUsers.find((u) => u.username?.toLowerCase() === cleanedUsername || u.name.toLowerCase() === cleanedUsername);
+  const loginAsUser = async (identifier: string, pass: string) => {
+    const cleanedIdentifier = identifier.trim().toLowerCase();
+    if (!cleanedIdentifier) {
+      return { success: false, message: 'Please enter your username or registered auth email.' };
+    }
+    if (!pass) {
+      return { success: false, message: 'Please enter your password.' };
+    }
+
+    // Find existing user by username, email, or name
+    const existing = allUsers.find(
+      (u) =>
+        u.username?.toLowerCase() === cleanedIdentifier ||
+        u.email?.toLowerCase() === cleanedIdentifier ||
+        u.name.toLowerCase() === cleanedIdentifier
+    );
+
+    if (existing && existing.email) {
+      try {
+        await signInWithEmailAndPassword(auth, existing.email, pass);
+      } catch (fbErr: any) {
+        console.warn('Firebase Auth sign in fallback check:', fbErr?.message);
+      }
+    }
 
     if (!existing) {
       return {
         success: false,
-        message: 'No account found with this username. Please click Sign Up to register.',
+        message: 'No account found with this username or email. Click "New Account" to register.',
       };
     }
 
-    setCurrentUser(existing);
-    localStorage.setItem('moneytracker_user', JSON.stringify(existing));
+    // Verify password if recorded
+    if (existing.password && existing.password !== pass) {
+      return {
+        success: false,
+        message: 'Incorrect password! Please check your password and try again.',
+      };
+    }
+
+    // Save updated login timestamp in RTDB and local state
+    const updatedUser: UserProfile = {
+      ...existing,
+      createdAt: existing.createdAt || new Date().toISOString(),
+    };
+
+    setCurrentUser(updatedUser);
+    localStorage.setItem('moneytracker_user', JSON.stringify(updatedUser));
+
+    // Persist login details & lastLoginAt in Realtime Database
+    set(ref(db, `users/${existing.uid}`), {
+      ...updatedUser,
+      lastLoginAt: new Date().toISOString(),
+    }).catch((err) => {
+      console.log('Updated user login record in RTDB:', err);
+    });
+
     return { success: true, message: `Welcome back, ${existing.name}!` };
   };
 

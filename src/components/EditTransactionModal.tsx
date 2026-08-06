@@ -87,33 +87,35 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-sm">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-5 sm:p-6 shadow-2xl text-slate-100 my-8 relative"
+          className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] flex flex-col shadow-2xl text-slate-100 relative overflow-hidden"
         >
           {/* Header */}
-          <div className="flex justify-between items-center pb-4 mb-4 border-b border-slate-800">
+          <div className="flex justify-between items-center px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-800 bg-slate-900 shrink-0 z-20">
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Edit3 className="w-5 h-5 text-indigo-400" />
+              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-indigo-400 shrink-0" />
                 <span>Edit {transaction.type === 'credit' ? 'Credit (Income)' : 'Transaction'} Record</span>
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-[11px] sm:text-xs text-slate-400">
                 Update amount, recipient name, payment method, or category
               </p>
             </div>
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+              className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors shrink-0"
+              title="Close Modal"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5">
             
             {/* Transaction Type */}
             <div>

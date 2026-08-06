@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, User, Clock, AlertTriangle, KeyRound, CheckCircle, RefreshCw, X, UserPlus, LogIn } from 'lucide-react';
+import { ShieldCheck, User, Clock, AlertTriangle, KeyRound, CheckCircle, RefreshCw, X, UserPlus, LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface AuthModalProps {
@@ -19,10 +19,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [adminOtp, setAdminOtp] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // User form state
-  const [userName, setUserName] = useState('');
-  const [userUsername, setUserUsername] = useState('');
+  // User login state
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+
+  // User sign up state
+  const [signUpName, setSignUpName] = useState('');
+  const [signUpUsername, setSignUpUsername] = useState('');
+  const [signUpEmail, setSignUpEmail] = useState('');
+  const [signUpPassword, setSignUpPassword] = useState('');
+  const [signUpConfirmPassword, setSignUpConfirmPassword] = useState('');
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
 
   // Start OTP timer as soon as admin tab opens or modal opens
   useEffect(() => {
@@ -51,17 +61,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleUserLoginSubmit = (e: React.FormEvent) => {
+  const handleUserLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
 
-    if (!userUsername.trim()) {
-      setErrorMessage('Please enter your username.');
+    if (!loginIdentifier.trim()) {
+      setErrorMessage('Please enter your username or auth email address.');
+      return;
+    }
+    if (!loginPassword) {
+      setErrorMessage('Please enter your password.');
       return;
     }
 
-    const res = loginAsUser(userUsername.trim());
+    setIsSubmitting(true);
+    const res = await loginAsUser(loginIdentifier.trim(), loginPassword);
+    setIsSubmitting(false);
+
     if (res.success) {
       setSuccessMessage(res.message);
       setTimeout(() => {
@@ -72,17 +89,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleSignUpSubmit = (e: React.FormEvent) => {
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
 
-    if (!userName.trim() || !userUsername.trim()) {
-      setErrorMessage('Please provide both full name and username.');
+    if (!signUpName.trim() || !signUpUsername.trim() || !signUpEmail.trim() || !signUpPassword) {
+      setErrorMessage('Please fill in all required fields (Name, Username, Auth Email, Password).');
       return;
     }
 
-    const res = signUpUser(userName, userUsername);
+    if (signUpPassword !== signUpConfirmPassword) {
+      setErrorMessage('Passwords do not match! Please check your confirm password field.');
+      return;
+    }
+
+    if (signUpPassword.length < 6) {
+      setErrorMessage('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const res = await signUpUser(
+      signUpName.trim(),
+      signUpUsername.trim(),
+      signUpEmail.trim(),
+      signUpPassword
+    );
+    setIsSubmitting(false);
+
     if (res.success) {
       setSuccessMessage(res.message);
       setTimeout(() => {
@@ -123,7 +158,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <span>Money Tracker Security Vault</span>
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              Sign in or request user approval to access financial records
+              Sign in with password or register with auth email
             </p>
           </div>
 
@@ -169,16 +204,47 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <form onSubmit={handleUserLoginSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Registered Username *
+                  Username or Auth Email *
                 </label>
-                <input
-                  type="text"
-                  value={userUsername}
-                  onChange={(e) => setUserUsername(e.target.value)}
-                  placeholder="e.g. john_doe"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
-                  required
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={loginIdentifier}
+                    onChange={(e) => setLoginIdentifier(e.target.value)}
+                    placeholder="e.g. john_doe or john@example.com"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Password *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <input
+                    type={showLoginPassword ? 'text' : 'password'}
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200"
+                  >
+                    {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               {errorMessage && (
@@ -197,60 +263,137 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl text-sm shadow-md transition-all active:scale-98"
+                disabled={isSubmitting}
+                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl text-sm shadow-md transition-all active:scale-98 disabled:opacity-50"
               >
-                Sign In To Vault
+                {isSubmitting ? 'Verifying Password...' : 'Sign In To Vault'}
               </button>
             </form>
           )}
 
           {/* USER SIGN UP FORM */}
           {activeTab === 'signup' && (
-            <form onSubmit={handleSignUpSubmit} className="space-y-4">
+            <form onSubmit={handleSignUpSubmit} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
                   Full Name *
                 </label>
-                <input
-                  type="text"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  placeholder="e.g. John Doe"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
-                  required
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={signUpName}
+                    onChange={(e) => setSignUpName(e.target.value)}
+                    placeholder="e.g. John Doe"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    required
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
                   Username / User ID *
                 </label>
-                <input
-                  type="text"
-                  value={userUsername}
-                  onChange={(e) => setUserUsername(e.target.value)}
-                  placeholder="e.g. john_doe"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
-                  required
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={signUpUsername}
+                    onChange={(e) => setSignUpUsername(e.target.value)}
+                    placeholder="e.g. john_doe"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    required
+                  />
+                </div>
               </div>
 
-              <div className="bg-amber-950/30 border border-amber-800/40 p-3 rounded-xl text-[11px] text-amber-300 space-y-1">
-                <p className="font-bold">🔒 Admin Approval Security Rule:</p>
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Auth Email Address *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Mail className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <input
+                    type="email"
+                    value={signUpEmail}
+                    onChange={(e) => setSignUpEmail(e.target.value)}
+                    placeholder="e.g. john@example.com"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Password * (Min 6 characters)
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <input
+                    type={showSignUpPassword ? 'text' : 'password'}
+                    value={signUpPassword}
+                    onChange={(e) => setSignUpPassword(e.target.value)}
+                    placeholder="••••••••"
+                    minLength={6}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-9 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200"
+                  >
+                    {showSignUpPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Confirm Password *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <input
+                    type={showSignUpPassword ? 'text' : 'password'}
+                    value={signUpConfirmPassword}
+                    onChange={(e) => setSignUpConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    minLength={6}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="bg-amber-950/30 border border-amber-800/40 p-2.5 rounded-xl text-[11px] text-amber-300 space-y-0.5">
+                <p className="font-bold">🔒 Admin Approval Required:</p>
                 <p className="opacity-90">
-                  New accounts require approval by Admin Rahee before profile data is activated.
+                  Registered auth email will require manual approval by Admin Rahee.
                 </p>
               </div>
 
               {errorMessage && (
-                <div className="p-3 bg-rose-950/60 border border-rose-800 rounded-xl text-xs text-rose-300 flex items-center gap-2">
+                <div className="p-2.5 bg-rose-950/60 border border-rose-800 rounded-xl text-xs text-rose-300 flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>{errorMessage}</span>
                 </div>
               )}
 
               {successMessage && (
-                <div className="p-3 bg-emerald-950/60 border border-emerald-800 rounded-xl text-xs text-emerald-300 flex items-center gap-2">
+                <div className="p-2.5 bg-emerald-950/60 border border-emerald-800 rounded-xl text-xs text-emerald-300 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>{successMessage}</span>
                 </div>
@@ -258,9 +401,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl text-sm shadow-md transition-all active:scale-98"
+                disabled={isSubmitting}
+                className="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl text-xs shadow-md transition-all active:scale-98 disabled:opacity-50"
               >
-                Register Account (Send For Approval)
+                {isSubmitting ? 'Registering Auth Email...' : 'Register Account with Auth Email'}
               </button>
             </form>
           )}
