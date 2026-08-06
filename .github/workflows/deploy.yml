@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          # Removghyerd cache: 'npm' to prevent lockfile missing errors
+          # Removed cache: 'npm' to prevent lockfile missing errors
           
       - run: npm install
       - run: npm run build
