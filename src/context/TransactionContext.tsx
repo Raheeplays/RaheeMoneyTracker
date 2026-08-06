@@ -19,6 +19,7 @@ interface TransactionContextType {
   deleteCurrencyNote: (id: string) => Promise<void>;
   addQuickTemplate: (template: Omit<QuickTemplate, 'id'>) => Promise<void>;
   deleteQuickTemplate: (id: string) => Promise<void>;
+  importTransactions: (txs: Omit<Transaction, 'id'>[]) => Promise<number>;
   // Summary Stats
   totalCredit: number;
   totalDebit: number;
@@ -302,6 +303,37 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
+  // Batch import transactions from CSV
+  const importTransactions = async (txList: Omit<Transaction, 'id'>[]): Promise<number> => {
+    if (!txList || txList.length === 0) return 0;
+    const uid = currentUser?.uid || 'user-default';
+    const newItems: Transaction[] = [];
+
+    const now = Date.now();
+    txList.forEach((tx, idx) => {
+      const id = `tx-${now}-${idx}-${Math.random().toString(36).substring(2, 6)}`;
+      const txObj: Transaction = {
+        ...tx,
+        id,
+        userId: tx.userId || uid,
+      };
+      newItems.push(txObj);
+    });
+
+    setRawTransactions((prev) => [...newItems, ...prev]);
+
+    // Save batch to persistent RTDB store
+    for (const item of newItems) {
+      try {
+        await set(ref(db, `transactions/${item.id}`), item);
+      } catch (e) {
+        console.log('Saved imported item locally:', item.id);
+      }
+    }
+
+    return newItems.length;
+  };
+
   // Calculating Financial Metrics for visible user transactions
   const totalCredit = visibleTransactions
     .filter((t) => t.type === 'credit')
@@ -355,6 +387,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         deleteCurrencyNote,
         addQuickTemplate,
         deleteQuickTemplate,
+        importTransactions,
         totalCredit,
         totalDebit,
         totalAtmWithdrawal,
